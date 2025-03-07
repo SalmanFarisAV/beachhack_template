@@ -3,9 +3,10 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 import numpy as np
 import pandas as pd
 import tensorflow as tf
+import pickle
 
 # Load the dataset
-df = pd.read_csv('next_word_dataset_2.csv')
+df = pd.read_csv('next_word_dataset_3.csv')
 
 # Tokenize the words
 tokenizer = Tokenizer()
@@ -17,7 +18,6 @@ input_sequences = tokenizer.texts_to_sequences(df["Input"])
 output_sequences = tokenizer.texts_to_sequences(df["Output"])
 
 # Flatten output_sequences to a list of single integers
-# Ensure each output is a single word and handle empty sequences
 output_sequences = [seq[0] if seq else 0 for seq in output_sequences]  # Use 0 for empty sequences
 
 # Pad input sequences to ensure uniform input size
@@ -47,22 +47,9 @@ model.summary()
 # Train the model
 model.fit(input_sequences, output_sequences, epochs=50, verbose=1)
 
-# Function to predict the next word
-def predict_next_word(input_text, num_suggestions=12):
-    # Tokenize the input text
-    input_seq = tokenizer.texts_to_sequences([input_text])
-    input_seq = pad_sequences(input_seq, maxlen=max_sequence_length, padding="pre")
-
-    # Predict the next word
-    predicted_probs = model.predict(input_seq, verbose=0)[0]
-    predicted_indices = np.argsort(predicted_probs)[-num_suggestions:][::-1]
-    predicted_words = [tokenizer.index_word.get(idx, "") for idx in predicted_indices if idx in tokenizer.index_word]
-    return predicted_words
-
-# Example usage
-input_text = "I have"
-suggestions = predict_next_word(input_text)
-print(suggestions)
-
 # Save the model
-model.save("lstm.h5")
+model.save("lstm_new.h5")
+
+# Save the tokenizer
+with open('tokenizer_new.pkl', 'wb') as tokenizer_file:
+    pickle.dump(tokenizer, tokenizer_file)

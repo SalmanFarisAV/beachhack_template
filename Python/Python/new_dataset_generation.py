@@ -2,7 +2,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 
 # Load your dataset
-data = pd.read_csv("hospital_dataset.csv")
+data = pd.read_csv("hospital_dataset_new.csv")
 sentences = data["Sentence"].tolist()
 
 # Create input-output pairs
@@ -16,4 +16,4 @@ for sentence in sentences:
 
 # Save to CSV
 df = pd.DataFrame(input_output_pairs)
-df.to_csv("next_word_dataset_2.csv", index=False)
+df.to_csv("next_word_dataset_3.csv", index=False)
