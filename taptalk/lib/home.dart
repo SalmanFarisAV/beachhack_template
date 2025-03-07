@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:taptalk/scentence.dart';
 import 'login.dart';
 
 class HomePage extends StatefulWidget {
@@ -48,23 +49,10 @@ class _HomePageState extends State<HomePage> {
     // Add more word sets as needed
   ];
 
-  int currentGridIndex = 0; // Track the current grid index
-  final PageController _pageController =
-      PageController(); // For sliding navigation
-  List<String> keywordList = []; // Store selected keywords
-  List<String> sentenceList = [
-    // Predefined sentences for matching
-    "I feel dizzy",
-    "I have a headache",
-    "My stomach hurts",
-    "I feel weak and tired",
-    "I have blurry vision",
-    "I feel nauseous",
-    "I have a sore throat",
-    "I feel sharp pain in my chest",
-    "I have difficulty breathing",
-    "I feel severe pain",
-  ];
+  int currentGridIndex = 0;
+  final PageController _pageController = PageController();
+  List<String> keywordList = [];
+  List<String> sentenceList = sentenceListA;
 
   Future<void> _logout(BuildContext context) async {
     await _auth.signOut();
@@ -100,6 +88,13 @@ class _HomePageState extends State<HomePage> {
       keywordList.clear(); // Clear the keyword list
       isBottomSheetOpen = false; // Close the bottom sheet
     });
+  }
+
+  // Helper function to check if a sentence contains all keywords as whole words
+  bool _containsKeywords(String sentence, List<String> keywords) {
+    final wordsInSentence = sentence.toLowerCase().split(RegExp(r'\W+'));
+    return keywords
+        .every((keyword) => wordsInSentence.contains(keyword.toLowerCase()));
   }
 
   @override
@@ -140,21 +135,21 @@ class _HomePageState extends State<HomePage> {
                 leading: const Icon(Icons.history),
                 title: const Text('Recently Used'),
                 onTap: () {
-                  Navigator.pop(context);
+                  // Navigator.pop(context);
                 },
               ),
               ListTile(
                 leading: const Icon(Icons.chat),
                 title: const Text('Chat'),
                 onTap: () {
-                  Navigator.pop(context);
+                  // Navigator.pop(context);
                 },
               ),
               ListTile(
                 leading: const Icon(Icons.record_voice_over),
                 title: const Text('Speech Therapy'),
                 onTap: () {
-                  Navigator.pop(context);
+                  // Navigator.pop(context);
                 },
               ),
               ListTile(
@@ -305,16 +300,14 @@ class _HomePageState extends State<HomePage> {
                       Expanded(
                         child: ListView.builder(
                           itemCount: sentenceList.where((sentence) {
-                            return keywordList.every((keyword) => sentence
-                                .toLowerCase()
-                                .contains(keyword.toLowerCase()));
+                            return _containsKeywords(sentence,
+                                keywordList); // Use the helper function
                           }).length,
                           itemBuilder: (context, index) {
                             final matchedSentences =
                                 sentenceList.where((sentence) {
-                              return keywordList.every((keyword) => sentence
-                                  .toLowerCase()
-                                  .contains(keyword.toLowerCase()));
+                              return _containsKeywords(sentence,
+                                  keywordList); // Use the helper function
                             }).toList();
                             return ListTile(
                               title: Text(

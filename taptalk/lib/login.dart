@@ -15,6 +15,7 @@ class _LoginPageState extends State<LoginPage> {
   bool isDarkMode = false;
   bool isLoading = false; // For loading indicator
   bool isPasswordVisible = false; // For password visibility toggle
+  bool agreeToTerms = false; // For terms and conditions checkbox
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
@@ -38,7 +39,7 @@ class _LoginPageState extends State<LoginPage> {
       }
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => HomePage()),
+        MaterialPageRoute(builder: (context) => const HomePage()),
       );
     } catch (e) {
       ScaffoldMessenger.of(context)
@@ -69,7 +70,7 @@ class _LoginPageState extends State<LoginPage> {
       home: Scaffold(
         appBar: AppBar(
           title: Text(
-            'Login',
+            'TapTalk',
             style:
                 GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 25),
           ),
@@ -95,18 +96,37 @@ class _LoginPageState extends State<LoginPage> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  Text(
+                    isSignup ? 'Create Account' : 'Login',
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 25,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
                   if (isSignup)
                     TextField(
                         controller: nameController,
-                        decoration: const InputDecoration(labelText: "Name")),
+                      decoration: const InputDecoration(
+                        labelText: "Full Name",
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  const SizedBox(height: 10),
                   TextField(
                       controller: emailController,
-                      decoration: const InputDecoration(labelText: "Email")),
+                    decoration: const InputDecoration(
+                      labelText: "Email Address",
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
                   TextField(
                       controller: passwordController,
-                      obscureText: !isPasswordVisible, // Toggle visibility
+                    obscureText: !isPasswordVisible,
                       decoration: InputDecoration(
                         labelText: "Password",
+                      border: const OutlineInputBorder(),
                         suffixIcon: IconButton(
                           icon: Icon(
                             isPasswordVisible
@@ -115,12 +135,12 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                           onPressed: togglePasswordVisibility,
                         ),
-                      )),
+                    ),
+                  ),
                   const SizedBox(height: 20),
+                    
                   ElevatedButton(
-                    onPressed: isLoading
-                        ? null
-                        : handleAuth,
+                    onPressed: isLoading ? null : handleAuth,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: isDarkMode ? Colors.black : Colors.white,
                       foregroundColor: isDarkMode ? Colors.white : Colors.black,
@@ -131,6 +151,7 @@ class _LoginPageState extends State<LoginPage> {
                           width: 2,
                         ),
                       ),
+                      minimumSize: const Size(double.infinity, 50),
                     ),
                     child: isLoading
                         ? SizedBox(
@@ -142,20 +163,47 @@ class _LoginPageState extends State<LoginPage> {
                                 isDarkMode ? Colors.white : Colors.black,
                               ),
                             ),
-                          ) 
+                          )
                         : Text(isSignup ? "Sign Up" : "Sign In"),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    'Or Continue With',
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      color: Colors.grey,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.facebook),
+                        onPressed: () {},
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.g_mobiledata),
+                        onPressed: () {},
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.apple),
+                        onPressed: () {},
+                      ),
+                    ],
                   ),
                   TextButton(
                     onPressed: () => setState(() => isSignup = !isSignup),
                     child: Text(isSignup
                         ? "Already have an account? Sign In"
                         : "Don't have an account? Sign Up"),
-                  )
+                  ),
                 ],
               ),
             ),
           ),
         ),
+
       ),
     );
   }
@@ -177,7 +225,7 @@ class _LoginPageState extends State<LoginPage> {
       ),
       inputDecorationTheme: const InputDecorationTheme(
         labelStyle: TextStyle(color: Colors.black),
-        focusedBorder: UnderlineInputBorder(
+        focusedBorder: OutlineInputBorder(
           borderSide: BorderSide(color: Colors.black),
         ),
       ),
@@ -216,7 +264,7 @@ class _LoginPageState extends State<LoginPage> {
       ),
       inputDecorationTheme: const InputDecorationTheme(
         labelStyle: TextStyle(color: Colors.white),
-        focusedBorder: UnderlineInputBorder(
+        focusedBorder: OutlineInputBorder(
           borderSide: BorderSide(color: Colors.white),
         ),
       ),
