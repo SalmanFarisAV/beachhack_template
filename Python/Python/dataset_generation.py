@@ -13,6 +13,7 @@ symptoms = [
     "Mood swings", "Depression", "Anxiety", "Insomnia", "Hallucinations",
     "Seizures", "Tremors", "Hearing loss", "Ear pain", "Loss of taste or smell"
 ]
+
 locations = [
     "Pharmacy", "Doctor", "Nurse station", "Emergency room", "ICU",
     "Operation theater", "Waiting area", "Reception", "Laboratory", "Radiology",
@@ -52,16 +53,29 @@ modifiers = [
     "Developing", "Episodic", "Lingering", "Unpredictable", "Overwhelming"
 ]
 
+# Required sentence starters
+valid_starters = ["I", "You", "Where", "Help", "Can", "We", "They", "Will", "Our", "My", "Should", "Could"]
+
+# Define templates ensuring correct sentence starters
+templates = [
+    "I have a {mod} {sym}.",
+    "You might be experiencing {mod} {sym}.",
+    "Where is the {loc}?",
+    "Help me, I feel {mod} {sym}.",
+    "Can you {act} me with my {sym}?",
+    "We need to {act} the {loc}.",
+    "They should {act} the {sym}.",
+    "Will I recover from {mod} {sym}?",
+    "Our {loc} needs better equipment.",
+    "My {sym} is getting worse.",
+    "Should I visit the {loc}?",
+    "Could you {act} the {sym} for me?"
+]
+
 # Generate sentences (allowing duplicates initially)
 sentences = []
-for _ in range(10000):  # Generate exactly 10,000 sentences
-    template = random.choice([
-        "I have a {mod} {sym}.",
-        "Where is the {loc}?",
-        "Can you {act} me with my {sym}?",
-        "I need to {act} the {loc}.",
-        "Help me, I feel {mod} {sym}."
-    ])
+for _ in range(25000):  # Generate exactly 10,000 sentences
+    template = random.choice(templates)
     sentence = template.format(
         mod=random.choice(modifiers),
         sym=random.choice(symptoms),
@@ -74,7 +88,7 @@ for _ in range(10000):  # Generate exactly 10,000 sentences
 unique_sentences = list(dict.fromkeys(sentences))  # Preserves order, removes duplicates
 
 df = pd.DataFrame(unique_sentences, columns=["Sentence"])
-df.to_csv("hospital_dataset.csv", index=False)
+df.to_csv("hospital_dataset_new.csv", index=False)
 
 # Report results
 print(f"Generated 10,000 sentences, {len(unique_sentences)} were unique.")
