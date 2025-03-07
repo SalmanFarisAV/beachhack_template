@@ -120,7 +120,7 @@ class _LoginPageState extends State<LoginPage> {
                   ElevatedButton(
                     onPressed: isLoading
                         ? null
-                        : handleAuth, // Disable button when loading
+                        : handleAuth,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: isDarkMode ? Colors.black : Colors.white,
                       foregroundColor: isDarkMode ? Colors.white : Colors.black,
@@ -133,7 +133,16 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                     child: isLoading
-                        ? const CircularProgressIndicator() // Show loading indicator
+                        ? SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                isDarkMode ? Colors.white : Colors.black,
+                              ),
+                            ),
+                          ) 
                         : Text(isSignup ? "Sign Up" : "Sign In"),
                   ),
                   TextButton(
