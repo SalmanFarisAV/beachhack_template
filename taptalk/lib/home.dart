@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_tts/flutter_tts.dart'; // Add flutter_tts
+import 'package:taptalk/global.dart';
+import 'package:taptalk/recent.dart';
 import 'package:taptalk/scentence.dart';
 import 'dart:convert';
 import 'login.dart';
@@ -86,6 +88,11 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         currentlyPlayingSentence = null;
       });
+
+      // Add the sentence to the recentList (without duplicates)
+      if (!recentList.contains(sentence)) {
+        recentList.add(sentence);
+      }
     }
   }
 
@@ -206,11 +213,16 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
               ),
-              ListTile(
+              // In the HomePage's drawer menu
+ListTile(
                 leading: const Icon(Icons.history),
                 title: const Text('Recently Used'),
                 onTap: () {
-                  // Navigator.pop(context);
+                  Navigator.pop(context); // Close the drawer
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const RecentPage()),
+                  );
                 },
               ),
               ListTile(

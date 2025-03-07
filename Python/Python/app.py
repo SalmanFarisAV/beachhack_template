@@ -6,10 +6,10 @@ import numpy as np
 import pickle
 
 # Load the saved model
-model = load_model("lstm_new.h5")
+model = load_model(r"C:\Users\salu9\OneDrive\Documents\GitHub\beachhack_template\Python\Python\lstm_new.h5")
 
 # Load the tokenizer
-with open("tokenizer_new.pkl", "rb") as f:
+with open(r"C:\Users\salu9\OneDrive\Documents\GitHub\beachhack_template\Python\Python\tokenizer_new.pkl", "rb") as f:
     tokenizer = pickle.load(f)
 
 # Define max_sequence_length (either calculate or set manually)
