@@ -1,7 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter_tts/flutter_tts.dart'; // Add flutter_tts
 import 'package:taptalk/scentence.dart';
+import 'dart:convert';
 import 'login.dart';
 
 class HomePage extends StatefulWidget {
@@ -17,42 +20,69 @@ class _HomePageState extends State<HomePage> {
   bool isBottomSheetOpen = false; // Track if the bottom sheet is open
 
   // List of words for the grids
-  final List<List<String>> wordSets = [
+  List<List<String>> wordSets = [
     [
       "I",
       "You",
-      "He",
-      "She",
-      "It",
+      "Where",
+      "Help",
+      "Our",
+      "Can",
       "We",
       "They",
-      "Can",
       "Will",
-      "Must",
+      "My",
       "Should",
-      "Would"
+      "Could"
     ],
-    [
-      "severe",
-      "dizzy",
-      "weak",
-      "tired",
-      "blurry",
-      "nauseous",
-      "sore",
-      "sharp",
-      "heart",
-      "stomach",
-      "headache",
-      "breathing"
-    ],
-    // Add more word sets as needed
   ];
 
   int currentGridIndex = 0;
   final PageController _pageController = PageController();
   List<String> keywordList = [];
   List<String> sentenceList = sentenceListA;
+
+  // Text-to-speech
+  final FlutterTts flutterTts = FlutterTts();
+  String? currentlyPlayingSentence; // Track the currently playing sentence
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeTts(); // Initialize TTS settings
+  }
+
+  // Initialize TTS settings
+  void _initializeTts() async {
+    await flutterTts.setLanguage("en-US"); // Set language
+    await flutterTts.setPitch(1.0); // Set pitch
+    await flutterTts.setSpeechRate(0.5); // Set speech rate
+    await flutterTts.awaitSpeakCompletion(true); // Wait for speech completion
+  }
+
+  // Play a sentence using TTS
+  void _playSentence(String sentence) async {
+    if (currentlyPlayingSentence == sentence) {
+      // If the same sentence is tapped again, stop playing
+      await flutterTts.stop();
+      setState(() {
+        currentlyPlayingSentence = null;
+      });
+    } else {
+      // Play the new sentence
+      await flutterTts.stop(); // Stop any ongoing speech
+      await flutterTts.speak(sentence);
+      setState(() {
+        currentlyPlayingSentence = sentence;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    flutterTts.stop(); // Stop TTS when the widget is disposed
+    super.dispose();
+  }
 
   Future<void> _logout(BuildContext context) async {
     await _auth.signOut();
@@ -68,33 +98,67 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  void _handleKeywordSelection(String keyword) {
+  void _handleKeywordSelection(String keyword) async {
     setState(() {
       keywordList.add(keyword); // Add keyword to the list
-      if (currentGridIndex < wordSets.length - 1) {
-        currentGridIndex++; // Move to the next grid
-        _pageController.animateToPage(
-          currentGridIndex,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-        );
-      }
       isBottomSheetOpen = true; // Open the bottom sheet
     });
+
+    // Call Flask backend to generate the next set of keywords
+    await _generateNextKeywords();
   }
 
   void _clearKeywords() {
     setState(() {
       keywordList.clear(); // Clear the keyword list
       isBottomSheetOpen = false; // Close the bottom sheet
+
+      // Keep only the first list in wordSets
+      if (wordSets.isNotEmpty) {
+        wordSets = [wordSets[0]];
+      }
+
+      // Reset the current grid index to 0
+      currentGridIndex = 0;
+
+      // Animate back to the first grid
+      _pageController.animateToPage(
+        0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
     });
   }
 
-  // Helper function to check if a sentence contains all keywords as whole words
-  bool _containsKeywords(String sentence, List<String> keywords) {
-    final wordsInSentence = sentence.toLowerCase().split(RegExp(r'\W+'));
-    return keywords
-        .every((keyword) => wordsInSentence.contains(keyword.toLowerCase()));
+  // Function to call Flask backend and generate the next set of keywords
+  Future<void> _generateNextKeywords() async {
+    final inputText = keywordList.join(' ');
+
+    final apiUrl = Uri.parse(
+        'http://10.0.2.2:5000/predict_next_word?input_text=$inputText');
+
+    final response = await http.get(apiUrl);
+
+    if (response.statusCode == 200) {
+      final responseData = jsonDecode(response.body);
+      final nextKeywords = List<String>.from(responseData['suggestions']);
+
+      setState(() {
+        wordSets.add(nextKeywords);
+        currentGridIndex++;
+        _pageController.animateToPage(
+          currentGridIndex,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content:
+                Text('Failed to generate keywords: ${response.statusCode}')),
+      );
+    }
   }
 
   @override
@@ -104,7 +168,7 @@ class _HomePageState extends State<HomePage> {
       home: Scaffold(
         appBar: AppBar(
           title: Text(
-            "Home",
+            "TapTalk",
             style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
           ),
           actions: [
@@ -204,6 +268,7 @@ class _HomePageState extends State<HomePage> {
                           ),
                           child: Center(
                             child: Text(
+                              textAlign: TextAlign.center,
                               currentWords[index],
                               style: GoogleFonts.poppins(
                                 fontSize: 18,
@@ -292,31 +357,38 @@ class _HomePageState extends State<HomePage> {
                               Icons.clear,
                               color: isDarkMode ? Colors.white : Colors.black,
                             ),
-                            onPressed:
-                                _clearKeywords, // Clear keywords and close bottom sheet
+                            onPressed: _clearKeywords,
                           ),
                         ],
                       ),
                       Expanded(
                         child: ListView.builder(
                           itemCount: sentenceList.where((sentence) {
-                            return _containsKeywords(sentence,
-                                keywordList); // Use the helper function
+                            return _containsKeywords(sentence, keywordList);
                           }).length,
                           itemBuilder: (context, index) {
                             final matchedSentences =
                                 sentenceList.where((sentence) {
-                              return _containsKeywords(sentence,
-                                  keywordList); // Use the helper function
+                              return _containsKeywords(sentence, keywordList);
                             }).toList();
+                            final sentence = matchedSentences[index];
                             return ListTile(
+                              leading: currentlyPlayingSentence == sentence
+                                  ? Icon(
+                                      Icons.volume_up,
+                                      color: isDarkMode
+                                          ? Colors.white
+                                          : Colors.black,
+                                    )
+                                  : null,
                               title: Text(
-                                matchedSentences[index],
+                                sentence,
                                 style: TextStyle(
                                   color:
                                       isDarkMode ? Colors.white : Colors.black,
                                 ),
                               ),
+                              onTap: () => _playSentence(sentence),
                             );
                           },
                         ),
@@ -329,5 +401,12 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     );
+  }
+
+  // Helper function to check if a sentence contains all keywords as whole words
+  bool _containsKeywords(String sentence, List<String> keywords) {
+    final wordsInSentence = sentence.toLowerCase().split(RegExp(r'\W+'));
+    return keywords
+        .every((keyword) => wordsInSentence.contains(keyword.toLowerCase()));
   }
 }

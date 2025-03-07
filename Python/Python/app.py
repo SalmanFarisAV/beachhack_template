@@ -6,10 +6,10 @@ import numpy as np
 import pickle
 
 # Load the saved model
-model = load_model("lstm.h5")
+model = load_model(r"C:\Users\salu9\OneDrive\Documents\GitHub\beachhack_template\Python\Python\lstm.h5")
 
 # Load the tokenizer
-with open("tokenizer.pkl", "rb") as f:
+with open(r"C:\Users\salu9\OneDrive\Documents\GitHub\beachhack_template\Python\Python\tokenizer.pkl", "rb") as f:
     tokenizer = pickle.load(f)
 
 # Define max_sequence_length (either calculate or set manually)
@@ -52,7 +52,7 @@ def api_predict_next_word():
     suggestions = predict_next_word(input_text, num_suggestions, filter_stop_words)
 
     # Return predictions as JSON
-    return jsonify({"input_text": input_text, "suggestions": suggestions})
+    return jsonify({"suggestions": suggestions})
 
 # Run the Flask app
 if __name__ == "__main__":
