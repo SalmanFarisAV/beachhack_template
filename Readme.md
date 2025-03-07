@@ -1,14 +1,17 @@
-# Project Name
+# TapTalk (Assistive Communication for Hearing and Speech Impaired Individuals)
 
 ## 🚀 Project Description
-A concise, engaging description of your hackathon project.
+This project enables faster communication for hearing and speech-impaired individuals by allowing them to select keywords that generate contextually relevant sentences. The selected sentences are converted into natural-sounding speech using Text-to-Speech (TTS) technology. The sentences are dynamically generated through an ML model that predicts the most relevant sentences based on the input keywords, helping users communicate effectively and efficiently without needing to type entire sentences. This solution is designed for a wide range of users, including those with cochlear implants, as well as individuals who rely on alternative communication methods.
 
 ## 🎯 Link to Project
 [live link of project](live_link)
 
 ## 🛠 Tech Stack
-- List the primary technologies used
-- Include programming languages, frameworks, and key libraries
+- Frontend: Flutter (for mobile app development)
+- Backend: Firebase / Postgresql (for storing predefined phrases and user preferences)
+- NLP for Sentence Prediction: BERT / GPT-3.5 / N-gram model
+- ML Model: Supervised learning (Naïve Bayes / Logistic Regression for keyword-to-sentence mapping), Transformer models (for context-aware sentence generation)
+- Text-to-Speech (TTS): Google TTS / Azure Speech
 
 ## 📦 Prerequisites
 - List all required software and versions
@@ -53,9 +56,9 @@ A concise, engaging description of your hackathon project.
    ```
 
 ## Team Members
-  [1.Team Member 1](enter_github_id_here)   
-  [2.Team Member 2](enter_github_id_here)   
-  [3.Team Member 3](enter_github_id_here)   
-  [4.Team Member 4](enter_github_id_here)  
+  [1.Salman Faris AV](https://github.com/SalmanFarisAV)   
+  [2.Jishnu Vijayan](https://github.com/JishnuVijayan)   
+  [3.Vidhya K](https://github.com/VidhyaKalapappara)   
+  [4.Sayand KK](https://github.com/sayandkk) 
 
 **Made with ❤️ at Beachhack 6**
