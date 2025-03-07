@@ -55,25 +55,36 @@ class _HomePageState extends State<HomePage> {
   // Initialize TTS settings
   void _initializeTts() async {
     await flutterTts.setLanguage("en-US"); // Set language
-    await flutterTts.setPitch(1.0); // Set pitch
-    await flutterTts.setSpeechRate(0.5); // Set speech rate
+    await flutterTts.setPitch(1); // Set pitch
+    await flutterTts.setSpeechRate(0.4); // Set speech rate
     await flutterTts.awaitSpeakCompletion(true); // Wait for speech completion
   }
 
-  // Play a sentence using TTS
   void _playSentence(String sentence) async {
     if (currentlyPlayingSentence == sentence) {
       // If the same sentence is tapped again, stop playing
       await flutterTts.stop();
       setState(() {
-        currentlyPlayingSentence = null;
+        currentlyPlayingSentence = null; // Clear the currently playing sentence
       });
     } else {
+      // Stop any ongoing speech
+      await flutterTts.stop();
+
       // Play the new sentence
-      await flutterTts.stop(); // Stop any ongoing speech
-      await flutterTts.speak(sentence);
       setState(() {
-        currentlyPlayingSentence = sentence;
+        currentlyPlayingSentence =
+            sentence; // Set the currently playing sentence
+      });
+
+      await flutterTts.speak(sentence);
+
+      // Wait for the speech to complete
+      await flutterTts.awaitSpeakCompletion(true);
+
+      // After speech completes, clear the currently playing sentence
+      setState(() {
+        currentlyPlayingSentence = null;
       });
     }
   }
