@@ -1,13 +1,15 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
-import 'package:flutter_tts/flutter_tts.dart'; // Add flutter_tts
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:taptalk/global.dart';
 import 'package:taptalk/recent.dart';
 import 'package:taptalk/scentence.dart';
 import 'dart:convert';
 import 'login.dart';
+import 'theme_provider.dart'; // Import the ThemeProvider
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -18,8 +20,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  bool isDarkMode = false;
-  bool isBottomSheetOpen = false; // Track if the bottom sheet is open
+  bool isBottomSheetOpen = false;
 
   // List of words for the grids
   List<List<String>> wordSets = [
@@ -46,45 +47,41 @@ class _HomePageState extends State<HomePage> {
 
   // Text-to-speech
   final FlutterTts flutterTts = FlutterTts();
-  String? currentlyPlayingSentence; // Track the currently playing sentence
+  String? currentlyPlayingSentence;
+
+  // State variable for the selected option
+  String selectedOption = 'Hospital'; // Default selected option
 
   @override
   void initState() {
     super.initState();
-    _initializeTts(); // Initialize TTS settings
+    _initializeTts();
   }
 
   // Initialize TTS settings
   void _initializeTts() async {
-    await flutterTts.setLanguage("en-US"); // Set language
-    await flutterTts.setPitch(1); // Set pitch
-    await flutterTts.setSpeechRate(0.4); // Set speech rate
-    await flutterTts.awaitSpeakCompletion(true); // Wait for speech completion
+    await flutterTts.setLanguage("en-US");
+    await flutterTts.setPitch(1);
+    await flutterTts.setSpeechRate(0.4);
+    await flutterTts.awaitSpeakCompletion(true);
   }
 
   void _playSentence(String sentence) async {
     if (currentlyPlayingSentence == sentence) {
-      // If the same sentence is tapped again, stop playing
       await flutterTts.stop();
       setState(() {
-        currentlyPlayingSentence = null; // Clear the currently playing sentence
+        currentlyPlayingSentence = null;
       });
     } else {
-      // Stop any ongoing speech
       await flutterTts.stop();
-
-      // Play the new sentence
       setState(() {
-        currentlyPlayingSentence =
-            sentence; // Set the currently playing sentence
+        currentlyPlayingSentence = sentence;
       });
 
       await flutterTts.speak(sentence);
 
-      // Wait for the speech to complete
       await flutterTts.awaitSpeakCompletion(true);
 
-      // After speech completes, clear the currently playing sentence
       setState(() {
         currentlyPlayingSentence = null;
       });
@@ -98,7 +95,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void dispose() {
-    flutterTts.stop(); // Stop TTS when the widget is disposed
+    flutterTts.stop();
     super.dispose();
   }
 
@@ -110,36 +107,26 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _toggleDarkMode(bool value) {
-    setState(() {
-      isDarkMode = value;
-    });
-  }
-
   void _handleKeywordSelection(String keyword) async {
     setState(() {
-      keywordList.add(keyword); // Add keyword to the list
-      isBottomSheetOpen = true; // Open the bottom sheet
+      keywordList.add(keyword);
+      isBottomSheetOpen = true;
     });
 
-    // Call Flask backend to generate the next set of keywords
     await _generateNextKeywords();
   }
 
   void _clearKeywords() {
     setState(() {
-      keywordList.clear(); // Clear the keyword list
-      isBottomSheetOpen = false; // Close the bottom sheet
+      keywordList.clear();
+      isBottomSheetOpen = false;
 
-      // Keep only the first list in wordSets
       if (wordSets.isNotEmpty) {
         wordSets = [wordSets[0]];
       }
 
-      // Reset the current grid index to 0
       currentGridIndex = 0;
 
-      // Animate back to the first grid
       _pageController.animateToPage(
         0,
         duration: const Duration(milliseconds: 300),
@@ -148,7 +135,6 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  // Function to call Flask backend and generate the next set of keywords
   Future<void> _generateNextKeywords() async {
     final inputText = keywordList.join(' ');
 
@@ -181,252 +167,277 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      theme: isDarkMode ? ThemeData.dark() : ThemeData.light(), // Apply theme
-      home: Scaffold(
-        appBar: AppBar(
-          title: Text(
-            "TapTalk",
-            style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-          ),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.logout),
-              onPressed: () => _logout(context),
-            ),
-          ],
+    final theme = Theme.of(context); // Get the current theme
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          "TapTalk",
+          style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
         ),
-        drawer: Drawer(
-          // Hamburger menu
-          child: ListView(
-            padding: EdgeInsets.zero,
-            children: [
-              const DrawerHeader(
-                decoration: BoxDecoration(
-                  color: Colors.black,
-                ),
-                child: Text(
-                  'Menu',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                  ),
-                ),
-              ),
-              // In the HomePage's drawer menu
-ListTile(
-                leading: const Icon(Icons.history),
-                title: const Text('Recently Used'),
-                onTap: () {
-                  Navigator.pop(context); // Close the drawer
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const RecentPage()),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.chat),
-                title: const Text('Chat'),
-                onTap: () {
-                  // Navigator.pop(context);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.record_voice_over),
-                title: const Text('Speech Therapy'),
-                onTap: () {
-                  // Navigator.pop(context);
-                },
-              ),
-              ListTile(
-                leading: Icon(
-                  isDarkMode ? Icons.light_mode : Icons.dark_mode,
-                ),
-                title: const Text('Dark Mode'),
-                trailing: Switch(
-                  value: isDarkMode,
-                  onChanged: _toggleDarkMode,
-                ),
-              ),
-            ],
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () => _logout(context),
           ),
-        ),
-        body: Stack(
+        ],
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
           children: [
-            // PageView for sliding grids
-            PageView.builder(
-              controller: _pageController,
-              itemCount: wordSets.length,
-              onPageChanged: (index) {
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary,
+              ),
+              child: Text(
+                'Menu',
+                style: TextStyle(
+                  color: theme.colorScheme.onPrimary,
+                  fontSize: 24,
+                ),
+              ),
+            ),
+            // Selectable options
+            RadioListTile(
+              title: const Text('General'),
+              value: 'General',
+              groupValue: selectedOption,
+              onChanged: (value) {
                 setState(() {
-                  currentGridIndex = index; // Update the current grid index
+                  selectedOption = value.toString();
                 });
               },
-              itemBuilder: (context, index) {
-                final currentWords =
-                    wordSets[index]; // Get the current word set
-                return Padding(
-                  padding: const EdgeInsets.all(15.0),
-                  child: GridView.builder(
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      crossAxisSpacing: 10,
-                      mainAxisSpacing: 10,
-                      childAspectRatio: 1,
-                    ),
-                    itemCount: currentWords.length,
-                    itemBuilder: (context, index) {
-                      return GestureDetector(
-                        onTap: () =>
-                            _handleKeywordSelection(currentWords[index]),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(
-                              color: isDarkMode ? Colors.white : Colors.black,
-                              width: 2,
-                            ),
-                          ),
-                          child: Center(
-                            child: Text(
-                              textAlign: TextAlign.center,
-                              currentWords[index],
-                              style: GoogleFonts.poppins(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                                color: isDarkMode ? Colors.white : Colors.black,
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
+            ),
+            RadioListTile(
+              title: const Text('Hospital'),
+              value: 'Hospital',
+              groupValue: selectedOption,
+              onChanged: (value) {
+                setState(() {
+                  selectedOption = value.toString();
+                });
+              },
+            ),
+            RadioListTile(
+              title: const Text('Market'),
+              value: 'Market',
+              groupValue: selectedOption,
+              onChanged: (value) {
+                setState(() {
+                  selectedOption = value.toString();
+                });
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.history),
+              title: const Text('Recently Used'),
+              onTap: () {
+                Navigator.pop(context); // Close the drawer
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const RecentPage()),
                 );
               },
             ),
-            // Left arrow (for previous grid)
-            if (currentGridIndex > 0)
-              Positioned(
-                left: 8,
-                top: MediaQuery.of(context).size.height / 2 + 70,
-                child: IconButton(
-                  icon: Icon(
-                    Icons.arrow_back,
-                    color: isDarkMode ? Colors.white : Colors.black,
-                  ),
-                  onPressed: () {
-                    _pageController.previousPage(
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeInOut,
-                    );
-                  },
-                ),
+            ListTile(
+              leading: const Icon(Icons.chat),
+              title: const Text('Chat'),
+              onTap: () {
+                // Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.record_voice_over),
+              title: const Text('Speech Therapy'),
+              onTap: () {
+                // Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: Icon(
+                themeProvider.themeMode == ThemeMode.dark
+                    ? Icons.light_mode
+                    : Icons.dark_mode,
               ),
-            // Right arrow (for next grid)
-            if (currentGridIndex < wordSets.length - 1)
-              Positioned(
-                right: 0,
-                top: MediaQuery.of(context).size.height / 2 + 70,
-                child: IconButton(
-                  icon: Icon(
-                    Icons.arrow_forward,
-                    color: isDarkMode ? Colors.white : Colors.black,
-                  ),
-                  onPressed: () {
-                    _pageController.nextPage(
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeInOut,
-                    );
-                  },
-                ),
+              title: const Text('Dark Mode'),
+              trailing: Switch(
+                value: themeProvider.themeMode == ThemeMode.dark,
+                onChanged: (value) {
+                  themeProvider.toggleTheme(); // Toggle theme
+                },
               ),
-            // Bottom Sheet as a persistent widget
-            if (isBottomSheetOpen)
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: Container(
-                  height: MediaQuery.of(context).size.height *
-                      0.3, // Adjust height as needed
-                  decoration: BoxDecoration(
-                    color: isDarkMode ? Colors.black : Colors.white,
-                    borderRadius:
-                        const BorderRadius.vertical(top: Radius.circular(16)),
-                    border: Border.all(
-                      color: isDarkMode ? Colors.white : Colors.black,
-                      width: 2,
-                    ),
-                  ),
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Suggestions',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: isDarkMode ? Colors.white : Colors.black,
-                            ),
-                          ),
-                          IconButton(
-                            icon: Icon(
-                              Icons.clear,
-                              color: isDarkMode ? Colors.white : Colors.black,
-                            ),
-                            onPressed: _clearKeywords,
-                          ),
-                        ],
-                      ),
-                      Expanded(
-                        child: ListView.builder(
-                          itemCount: sentenceList.where((sentence) {
-                            return _containsKeywords(sentence, keywordList);
-                          }).length,
-                          itemBuilder: (context, index) {
-                            final matchedSentences =
-                                sentenceList.where((sentence) {
-                              return _containsKeywords(sentence, keywordList);
-                            }).toList();
-                            final sentence = matchedSentences[index];
-                            return ListTile(
-                              leading: currentlyPlayingSentence == sentence
-                                  ? Icon(
-                                      Icons.volume_up,
-                                      color: isDarkMode
-                                          ? Colors.white
-                                          : Colors.black,
-                                    )
-                                  : null,
-                              title: Text(
-                                sentence,
-                                style: TextStyle(
-                                  color:
-                                      isDarkMode ? Colors.white : Colors.black,
-                                ),
-                              ),
-                              onTap: () => _playSentence(sentence),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+            ),
           ],
         ),
+      ),
+      body: Stack(
+        children: [
+          // PageView for sliding grids
+          PageView.builder(
+            controller: _pageController,
+            itemCount: wordSets.length,
+            onPageChanged: (index) {
+              setState(() {
+                currentGridIndex = index;
+              });
+            },
+            itemBuilder: (context, index) {
+              final currentWords = wordSets[index];
+              return Padding(
+                padding: const EdgeInsets.all(15.0),
+                child: GridView.builder(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                    childAspectRatio: 1,
+                  ),
+                  itemCount: currentWords.length,
+                  itemBuilder: (context, index) {
+                    return GestureDetector(
+                      onTap: () => _handleKeywordSelection(currentWords[index]),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: theme.colorScheme.onSurface,
+                            width: 2,
+                          ),
+                        ),
+                        child: Center(
+                          child: Text(
+                            textAlign: TextAlign.center,
+                            currentWords[index],
+                            style: GoogleFonts.poppins(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: theme.colorScheme.onSurface,
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
+          ),
+          // Left arrow (for previous grid)
+          if (currentGridIndex > 0)
+            Positioned(
+              left: 8,
+              top: MediaQuery.of(context).size.height / 2 + 70,
+              child: IconButton(
+                icon: Icon(
+                  Icons.arrow_back,
+                  color: theme.colorScheme.onSurface,
+                ),
+                onPressed: () {
+                  _pageController.previousPage(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                  );
+                },
+              ),
+            ),
+          // Right arrow (for next grid)
+          if (currentGridIndex < wordSets.length - 1)
+            Positioned(
+              right: 0,
+              top: MediaQuery.of(context).size.height / 2 + 70,
+              child: IconButton(
+                icon: Icon(
+                  Icons.arrow_forward,
+                  color: theme.colorScheme.onSurface,
+                ),
+                onPressed: () {
+                  _pageController.nextPage(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                  );
+                },
+              ),
+            ),
+          // Bottom Sheet as a persistent widget
+          if (isBottomSheetOpen)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Container(
+                height: MediaQuery.of(context).size.height * 0.25,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface,
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(16)),
+                  border: Border.all(
+                    color: theme.colorScheme.onSurface,
+                    width: 2,
+                  ),
+                ),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Suggestions',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: theme.colorScheme.onSurface,
+                          ),
+                        ),
+                        IconButton(
+                          icon: Icon(
+                            Icons.clear,
+                            color: theme.colorScheme.onSurface,
+                          ),
+                          onPressed: _clearKeywords,
+                        ),
+                      ],
+                    ),
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: sentenceList.where((sentence) {
+                          return _containsKeywords(sentence, keywordList);
+                        }).length,
+                        itemBuilder: (context, index) {
+                          final matchedSentences =
+                              sentenceList.where((sentence) {
+                            return _containsKeywords(sentence, keywordList);
+                          }).toList();
+                          final sentence = matchedSentences[index];
+                          return ListTile(
+                            leading: currentlyPlayingSentence == sentence
+                                ? Icon(
+                                    Icons.volume_up,
+                                    color: theme.colorScheme.onSurface,
+                                  )
+                                : null,
+                            title: Text(
+                              sentence,
+                              style: TextStyle(
+                                color: theme.colorScheme.onSurface,
+                              ),
+                            ),
+                            onTap: () => _playSentence(sentence),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
 
-  // Helper function to check if a sentence contains all keywords as whole words
   bool _containsKeywords(String sentence, List<String> keywords) {
     final wordsInSentence = sentence.toLowerCase().split(RegExp(r'\W+'));
     return keywords

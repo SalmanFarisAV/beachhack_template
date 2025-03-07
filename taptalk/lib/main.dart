@@ -1,13 +1,20 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
 import 'package:taptalk/login.dart';
-import 'package:taptalk/home.dart'; // Import your home page
+import 'package:taptalk/home.dart';
+import 'theme_provider.dart'; // Import the ThemeProvider
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => ThemeProvider(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -15,9 +22,14 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: AuthWrapper(), 
+      theme: ThemeData.light(), // Default light theme
+      darkTheme: ThemeData.dark(), // Dark theme
+      themeMode: themeProvider.themeMode, // Use theme mode from provider
+      home: const AuthWrapper(),
     );
   }
 }
@@ -36,9 +48,9 @@ class AuthWrapper extends StatelessWidget {
           );
         }
         if (snapshot.hasData) {
-          return HomePage();
+          return const HomePage(); // User is logged in, show HomePage
         } else {
-          return const LoginPage();
+          return const LoginPage(); // User is not logged in, show LoginPage
         }
       },
     );

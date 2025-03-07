@@ -1,7 +1,9 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'home.dart';
+import 'theme_provider.dart'; // Import the ThemeProvider
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -12,10 +14,8 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   bool isSignup = false;
-  bool isDarkMode = false;
-  bool isLoading = false; // For loading indicator
-  bool isPasswordVisible = false; // For password visibility toggle
-  bool agreeToTerms = false; // For terms and conditions checkbox
+  bool isLoading = false;
+  bool isPasswordVisible = false;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
@@ -23,7 +23,7 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> handleAuth() async {
     setState(() {
-      isLoading = true; // Show loading indicator
+      isLoading = true;
     });
     try {
       if (isSignup) {
@@ -46,15 +46,9 @@ class _LoginPageState extends State<LoginPage> {
           .showSnackBar(SnackBar(content: Text(e.toString())));
     } finally {
       setState(() {
-        isLoading = false; // Hide loading indicator
+        isLoading = false;
       });
     }
-  }
-
-  void toggleDarkMode() {
-    setState(() {
-      isDarkMode = !isDarkMode;
-    });
   }
 
   void togglePasswordVisibility() {
@@ -65,222 +59,134 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      theme: isDarkMode ? _buildDarkTheme() : _buildLightTheme(),
-      home: Scaffold(
-        appBar: AppBar(
-          title: Text(
-            'TapTalk',
-            style:
-                GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 25),
-          ),
-          actions: [
-            IconButton(
-              icon: Icon(isDarkMode ? Icons.light_mode : Icons.dark_mode),
-              onPressed: toggleDarkMode,
-            ),
-          ],
+    final theme = Theme.of(context); // Get the current theme
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'TapTalk',
+          style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 25),
         ),
-        body: Center(
-          child: Card(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(6),
-              side: BorderSide(
-                color: isDarkMode ? Colors.white : Colors.black,
-                width: 2,
-              ),
+      ),
+      body: Center(
+        child: Card(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(6),
+            side: BorderSide(
+              color: theme.colorScheme.onSurface,
+              width: 2,
             ),
-            margin: const EdgeInsets.all(16),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    isSignup ? 'Create Account' : 'Login',
-                    style: GoogleFonts.poppins(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 25,
-                    ),
+          ),
+          margin: const EdgeInsets.all(16),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  isSignup ? 'Create Account' : 'Login',
+                  style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 25,
                   ),
-                  const SizedBox(height: 20),
-                  if (isSignup)
-                    TextField(
-                        controller: nameController,
-                      decoration: const InputDecoration(
-                        labelText: "Full Name",
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                  const SizedBox(height: 10),
+                ),
+                const SizedBox(height: 20),
+                if (isSignup)
                   TextField(
-                      controller: emailController,
+                    controller: nameController,
                     decoration: const InputDecoration(
-                      labelText: "Email Address",
+                      labelText: "Full Name",
                       border: OutlineInputBorder(),
                     ),
                   ),
-                  const SizedBox(height: 10),
-                  TextField(
-                      controller: passwordController,
-                    obscureText: !isPasswordVisible,
-                      decoration: InputDecoration(
-                        labelText: "Password",
-                      border: const OutlineInputBorder(),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            isPasswordVisible
-                                ? Icons.visibility
-                                : Icons.visibility_off,
-                          ),
-                          onPressed: togglePasswordVisibility,
-                        ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: emailController,
+                  decoration: const InputDecoration(
+                    labelText: "Email Address",
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: passwordController,
+                  obscureText: !isPasswordVisible,
+                  decoration: InputDecoration(
+                    labelText: "Password",
+                    border: const OutlineInputBorder(),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        isPasswordVisible
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                      ),
+                      onPressed: togglePasswordVisibility,
                     ),
                   ),
-                  const SizedBox(height: 20),
-                    
-                  ElevatedButton(
-                    onPressed: isLoading ? null : handleAuth,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: isDarkMode ? Colors.black : Colors.white,
-                      foregroundColor: isDarkMode ? Colors.white : Colors.black,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(6),
-                        side: BorderSide(
-                          color: isDarkMode ? Colors.white : Colors.black,
-                          width: 2,
-                        ),
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: isLoading ? null : handleAuth,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: theme.colorScheme.surface,
+                    foregroundColor: theme.colorScheme.onSurface,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      side: BorderSide(
+                        color: theme.colorScheme.onSurface,
+                        width: 2,
                       ),
-                      minimumSize: const Size(double.infinity, 50),
                     ),
-                    child: isLoading
-                        ? SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                isDarkMode ? Colors.white : Colors.black,
-                              ),
+                    minimumSize: const Size(double.infinity, 50),
+                  ),
+                  child: isLoading
+                      ? SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              theme.colorScheme.onSurface,
                             ),
-                          )
-                        : Text(isSignup ? "Sign Up" : "Sign In"),
+                          ),
+                        )
+                      : Text(isSignup ? "Sign Up" : "Sign In"),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'Or Continue With',
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    color: Colors.grey,
                   ),
-                  const SizedBox(height: 20),
-                  Text(
-                    'Or Continue With',
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      color: Colors.grey,
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.facebook),
+                      onPressed: () {},
                     ),
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.facebook),
-                        onPressed: () {},
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.g_mobiledata),
-                        onPressed: () {},
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.apple),
-                        onPressed: () {},
-                      ),
-                    ],
-                  ),
-                  TextButton(
-                    onPressed: () => setState(() => isSignup = !isSignup),
-                    child: Text(isSignup
-                        ? "Already have an account? Sign In"
-                        : "Don't have an account? Sign Up"),
-                  ),
-                ],
-              ),
+                    IconButton(
+                      icon: const Icon(Icons.g_mobiledata),
+                      onPressed: () {},
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.apple),
+                      onPressed: () {},
+                    ),
+                  ],
+                ),
+                TextButton(
+                  onPressed: () => setState(() => isSignup = !isSignup),
+                  child: Text(isSignup
+                      ? "Already have an account? Sign In"
+                      : "Don't have an account? Sign Up"),
+                ),
+              ],
             ),
           ),
-        ),
-
-      ),
-    );
-  }
-
-  // Light theme (black text on white background)
-  ThemeData _buildLightTheme() {
-    return ThemeData(
-      brightness: Brightness.light,
-      primaryColor: Colors.black,
-      scaffoldBackgroundColor: Colors.white,
-      appBarTheme: const AppBarTheme(
-        color: Colors.white,
-        iconTheme: IconThemeData(color: Colors.black),
-        titleTextStyle: TextStyle(color: Colors.black, fontSize: 20),
-      ),
-      textTheme: const TextTheme(
-        bodyMedium: TextStyle(color: Colors.black),
-        bodyLarge: TextStyle(color: Colors.black),
-      ),
-      inputDecorationTheme: const InputDecorationTheme(
-        labelStyle: TextStyle(color: Colors.black),
-        focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.black),
-        ),
-      ),
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          foregroundColor: Colors.black,
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(6),
-            side: const BorderSide(color: Colors.black, width: 1),
-          ),
-        ),
-      ),
-      textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(
-          foregroundColor: Colors.black,
-        ),
-      ),
-    );
-  }
-
-  // Dark theme (white text on black background)
-  ThemeData _buildDarkTheme() {
-    return ThemeData(
-      brightness: Brightness.dark,
-      primaryColor: Colors.white,
-      scaffoldBackgroundColor: Colors.black,
-      appBarTheme: const AppBarTheme(
-        color: Colors.black,
-        iconTheme: IconThemeData(color: Colors.white),
-        titleTextStyle: TextStyle(color: Colors.white, fontSize: 20),
-      ),
-      textTheme: const TextTheme(
-        bodyMedium: TextStyle(color: Colors.white),
-        bodyLarge: TextStyle(color: Colors.white),
-      ),
-      inputDecorationTheme: const InputDecorationTheme(
-        labelStyle: TextStyle(color: Colors.white),
-        focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.white),
-        ),
-      ),
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          foregroundColor: Colors.white,
-          backgroundColor: Colors.black,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(6),
-            side: const BorderSide(color: Colors.white, width: 1),
-          ),
-        ),
-      ),
-      textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(
-          foregroundColor: Colors.white,
         ),
       ),
     );
