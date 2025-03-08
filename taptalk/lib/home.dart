@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:taptalk/chat.dart';
 import 'package:taptalk/global.dart';
 import 'package:taptalk/recent.dart';
 import 'package:taptalk/scentence.dart';
@@ -62,7 +63,7 @@ class _HomePageState extends State<HomePage> {
   void _initializeTts() async {
     await flutterTts.setLanguage("en-US");
     await flutterTts.setPitch(1);
-    await flutterTts.setSpeechRate(0.4);
+    await flutterTts.setSpeechRate(0.3);
     await flutterTts.awaitSpeakCompletion(true);
   }
 
@@ -184,6 +185,7 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       drawer: Drawer(
+        
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
@@ -245,7 +247,11 @@ class _HomePageState extends State<HomePage> {
               leading: const Icon(Icons.chat),
               title: const Text('Chat'),
               onTap: () {
-                // Navigator.pop(context);
+                Navigator.pop(context); // Close the drawer
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ChatPage()),
+                );
               },
             ),
             ListTile(

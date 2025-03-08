@@ -4,6 +4,11 @@ from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 import numpy as np
 import pickle
+import os
+from google import genai
+
+client = genai.Client(api_key=os.environ.get('GEMINI_KEY'))
+
 
 # Load the saved model
 model = load_model(r"C:\Users\salu9\OneDrive\Documents\GitHub\beachhack_template\Python\Python\lstm_new.h5")
@@ -39,6 +44,40 @@ def predict_next_word(input_text, num_suggestions=12, filter_stop_words=True):
 
 # Initialize Flask app
 app = Flask(__name__)
+
+
+
+@app.route("/generate_reply", methods=["GET"])
+def generate_reply():
+    # Get input text from query parameters
+    input_text = request.args.get("input_text", "")
+
+    # Define the prompt
+    prompt = f"Generate 3 possible replies for the following message: '{input_text}'. Each reply should be wrapped with a '$' sign at the beginning and end. Example format: $Reply 1$ $Reply 2$ $Reply 3$"
+
+    # Use Gemini API to generate replies
+    try:
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",  
+            contents=prompt,
+        )
+        # Extract the generated text
+        generated_text = response.text
+
+        # Split replies based on '$' and remove empty items
+        replies = [reply.strip() for reply in generated_text.split("$") if reply.strip()]
+
+        # Ensure we have exactly 3 replies
+        if len(replies) < 3:
+            replies.extend(["No reply available"] * (3 - len(replies)))
+        replies = replies[:3]  # Limit to 3 replies
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    # Return the generated replies
+    return jsonify({"replies": replies})
+
 
 
 @app.route("/predict_next_word", methods=["GET"])

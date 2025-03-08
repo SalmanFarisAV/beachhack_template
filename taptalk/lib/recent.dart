@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'global.dart';
 
 class RecentPage extends StatelessWidget {
@@ -8,7 +9,10 @@ class RecentPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Recently Played Sentences'),
+        title: Text(
+          "Recently Used",
+          style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back), // Back button icon
           onPressed: () {
