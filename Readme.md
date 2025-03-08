@@ -8,19 +8,17 @@ This project enables faster communication for hearing and speech-impaired indivi
 
 ## 🛠 Tech Stack
 - Frontend: Flutter (for mobile app development)
-- Backend: Firebase / Postgresql (for storing predefined phrases and user preferences)
-- NLP for Sentence Prediction: BERT / GPT-3.5 / N-gram model
-- ML Model: Supervised learning (Naïve Bayes / Logistic Regression for keyword-to-sentence mapping), Transformer models (for context-aware sentence generation)
-- Text-to-Speech (TTS): Google TTS / Azure Speech
+- Backend: Firebase / Flask (for storing predefined phrases and user preferences)
+- Deep Learning Model: LSTM (for keyword prediction),LLM
+- Text-to-Speech (TTS): Flutter tts 
 
 ## 📦 Prerequisites
-- List all required software and versions
-- Include installation instructions
-- Example:
+- Before setting up the project, ensure you have the following installed:
   ```
-  - Node.js (v14+)
-  - npm (v6+)
-  - Python (v3.8+)
+  - Flutter SDK (v3.0+)
+  - Python
+  - Firebase CLI
+  - Dart SDK 
   ```
 
 ## 🔧 Installation & Setup
@@ -28,28 +26,25 @@ This project enables faster communication for hearing and speech-impaired indivi
 1. Install dependencies
    ```bash
    # Frontend
-   cd frontend
-   npm install
+   git clone https://github.com/SalmanFarisAV/beachhack_template.git
+   cd TapTalk
 
    # Backend
-   cd ../backend
-   pip install -r requirements.txt
+   cd python/python
    ```
 
 2. Configure Environment Variables
    
-   - Create a `.env` file
-   - Add necessary configuration details
+   - Create a environmental variable
      
    ```
-   API_KEY=your_api_key
-   DATABASE_URL=your_database_connection_string
+   GEMINI_KEY=your_api_key
    ```
 
 4. Run the Application
    ```bash
    # Start frontend
-   npm start
+   flutter run
 
    # Start backend
    python app.py

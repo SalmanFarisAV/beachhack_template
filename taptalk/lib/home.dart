@@ -53,6 +53,9 @@ class _HomePageState extends State<HomePage> {
   // State variable for the selected option
   String selectedOption = 'Hospital'; // Default selected option
 
+  // Controller for the input bar
+  final TextEditingController _inputController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
@@ -91,12 +94,15 @@ class _HomePageState extends State<HomePage> {
       if (!recentList.contains(sentence)) {
         recentList.add(sentence);
       }
+      
+    
     }
   }
 
   @override
   void dispose() {
     flutterTts.stop();
+    _inputController.dispose();
     super.dispose();
   }
 
@@ -166,6 +172,32 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  void _refreshWordSets() {
+    if (recentList.isNotEmpty) {
+      // Find the first sentence in recentList that is not in sentenceListA
+      final newSentence = recentList.firstWhere(
+        (sentence) => !sentenceListA.contains(sentence),
+        orElse: () => '',
+      );
+
+      if (newSentence.isNotEmpty) {
+        // Take the first word of the new sentence
+        final firstWord = newSentence.split(' ').first;
+
+        setState(() {
+          if (wordSets.isNotEmpty && wordSets[0].isNotEmpty) {
+            // Replace the first keyword in the first grid
+            wordSets[0][10] = firstWord;
+          }
+        });
+
+        setState(() {
+          sentenceListA.add(newSentence);
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context); // Get the current theme
@@ -178,14 +210,14 @@ class _HomePageState extends State<HomePage> {
           style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
         ),
         actions: [
+          // Refresh button
           IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () => _logout(context),
+            icon: const Icon(Icons.refresh),
+            onPressed: _refreshWordSets,
           ),
         ],
       ),
       drawer: Drawer(
-        
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
@@ -275,97 +307,139 @@ class _HomePageState extends State<HomePage> {
                 },
               ),
             ),
+            // Logout button in the drawer
+            ListTile(
+              leading: const Icon(Icons.logout),
+              title: const Text('Logout'),
+              onTap: () => _logout(context),
+            ),
           ],
         ),
       ),
-      body: Stack(
+      body: Column(
         children: [
-          // PageView for sliding grids
-          PageView.builder(
-            controller: _pageController,
-            itemCount: wordSets.length,
-            onPageChanged: (index) {
-              setState(() {
-                currentGridIndex = index;
-              });
-            },
-            itemBuilder: (context, index) {
-              final currentWords = wordSets[index];
-              return Padding(
-                padding: const EdgeInsets.all(15.0),
-                child: GridView.builder(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
-                    childAspectRatio: 1,
-                  ),
-                  itemCount: currentWords.length,
+          // Input bar at the top
+          Padding(
+            padding:
+                const EdgeInsets.only(top: 8, bottom: 0, right: 16, left: 16),
+            child: TextField(
+              controller: _inputController,
+              decoration: InputDecoration(
+                hintText: 'Type a sentence and press Enter...',
+                border: const OutlineInputBorder(),
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.send),
+                  onPressed: () {
+                    final sentence = _inputController.text.trim();
+                    if (sentence.isNotEmpty) {
+                      _playSentence(sentence);
+                      _inputController.clear();
+                    }
+                  },
+                ),
+              ),
+              onSubmitted: (sentence) {
+                if (sentence.trim().isNotEmpty) {
+                  _playSentence(sentence);
+                  _inputController.clear();
+                }
+              },
+            ),
+          ),
+          Expanded(
+            child: Stack(
+              children: [
+                // PageView for sliding grids
+                PageView.builder(
+                  controller: _pageController,
+                  itemCount: wordSets.length,
+                  onPageChanged: (index) {
+                    setState(() {
+                      currentGridIndex = index;
+                    });
+                  },
                   itemBuilder: (context, index) {
-                    return GestureDetector(
-                      onTap: () => _handleKeywordSelection(currentWords[index]),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(
-                            color: theme.colorScheme.onSurface,
-                            width: 2,
-                          ),
+                    final currentWords = wordSets[index];
+                    return Padding(
+                      padding: const EdgeInsets.all(15.0),
+                      child: GridView.builder(
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3,
+                          crossAxisSpacing: 10,
+                          mainAxisSpacing: 10,
+                          childAspectRatio: 1,
                         ),
-                        child: Center(
-                          child: Text(
-                            textAlign: TextAlign.center,
-                            currentWords[index],
-                            style: GoogleFonts.poppins(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              color: theme.colorScheme.onSurface,
+                        itemCount: currentWords.length,
+                        itemBuilder: (context, index) {
+                          return GestureDetector(
+                            onTap: () =>
+                                _handleKeywordSelection(currentWords[index]),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(
+                                  color: theme.colorScheme.onSurface,
+                                  width: 2,
+                                ),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  textAlign: TextAlign.center,
+                                  currentWords[index],
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                    color: theme.colorScheme.onSurface,
+                                  ),
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
+                          );
+                        },
                       ),
                     );
                   },
                 ),
-              );
-            },
+                // Left arrow (for previous grid)
+                if (currentGridIndex > 0)
+                  Positioned(
+                    left: 8,
+                    top: MediaQuery.of(context).size.height / 2 + 70,
+                    child: IconButton(
+                      icon: Icon(
+                        Icons.arrow_back,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                      onPressed: () {
+                        _pageController.previousPage(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                        );
+                      },
+                    ),
+                  ),
+                // Right arrow (for next grid)
+                if (currentGridIndex < wordSets.length - 1)
+                  Positioned(
+                    right: 0,
+                    top: MediaQuery.of(context).size.height / 2 + 70,
+                    child: IconButton(
+                      icon: Icon(
+                        Icons.arrow_forward,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                      onPressed: () {
+                        _pageController.nextPage(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                        );
+                      },
+                    ),
+                  ),
+              ],
+            ),
           ),
-          // Left arrow (for previous grid)
-          if (currentGridIndex > 0)
-            Positioned(
-              left: 8,
-              top: MediaQuery.of(context).size.height / 2 + 70,
-              child: IconButton(
-                icon: Icon(
-                  Icons.arrow_back,
-                  color: theme.colorScheme.onSurface,
-                ),
-                onPressed: () {
-                  _pageController.previousPage(
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOut,
-                  );
-                },
-              ),
-            ),
-          // Right arrow (for next grid)
-          if (currentGridIndex < wordSets.length - 1)
-            Positioned(
-              right: 0,
-              top: MediaQuery.of(context).size.height / 2 + 70,
-              child: IconButton(
-                icon: Icon(
-                  Icons.arrow_forward,
-                  color: theme.colorScheme.onSurface,
-                ),
-                onPressed: () {
-                  _pageController.nextPage(
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOut,
-                  );
-                },
-              ),
-            ),
           // Bottom Sheet as a persistent widget
           if (isBottomSheetOpen)
             Positioned(
