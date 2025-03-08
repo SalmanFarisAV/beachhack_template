@@ -3,8 +3,6 @@
 ## 🚀 Project Description
 This project enables faster communication for hearing and speech-impaired individuals by allowing them to select keywords that generate contextually relevant sentences. The selected sentences are converted into natural-sounding speech using Text-to-Speech (TTS) technology. The sentences are dynamically generated through an ML model that predicts the most relevant sentences based on the input keywords, helping users communicate effectively and efficiently without needing to type entire sentences. This solution is designed for a wide range of users, including those with cochlear implants, as well as individuals who rely on alternative communication methods.
 
-## 🎯 Link to Project
-[live link of project](live_link)
 
 ## 🛠 Tech Stack
 - Frontend: Flutter (for mobile app development)
